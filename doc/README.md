@@ -16,3 +16,4 @@
 - FIND: [manual](info/find.13)
 - DIRDEV: [manual](_info_/dir.order)
 - DSKUSE: [manual](info/dskuse.10)
+- XXFILE: [manual](_info_/xxfile.info)
