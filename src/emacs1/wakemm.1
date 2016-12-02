@@ -1,0 +1,63 @@
+	TITLE WAKEMM -- Wake up MMAILR (for BABYL, etcetera)
+
+V%%WHO==0			; Who last edited (0=SRA)
+V%%MAJ==6			; Major and minor version match MMAILR's
+V%%MIN==1			; (which matches monitor's)
+V%%ED==^D1			; Edit number
+
+; Standard MRC stuff...
+
+	SEARCH MACSYM,MONSYM	; system definitions
+	SALL			; suppress macro expansions
+	.DIRECTIVE FLBLST	; sane listings for ASCIZ, etc.
+	.TEXT "/NOINITIAL"	; suppress loading of JOBDAT
+	.TEXT "WAKEMM/SAVE"	; save as WAKEMM.EXE
+	.TEXT "/SYMSEG:PSECT:CODE" ; put symbol table and patch area in CODE
+	.REQUIRE WAKEUP		; MMailr wakeup routine
+	.REQUIRE SYS:MACREL	; MACSYM support routines
+
+	EXTERN $WAKE		; The routine that does all our work
+
+IFNDEF DATORG,<DATORG==1000>	; data on page 1
+IFNDEF CODORG,<CODORG==400000>	; code on page 400
+IFNDEF PDLLEN,<PDLLEN==200>	; stack length
+
+IFNDEF MITSW,<MITSW==1>		; Assembling at MIT by default
+IFNDEF .PRKIL,<.PRKIL==2>	; For MIT EXEC fork control
+
+	.PSECT DATA,DATORG	; enter data area
+
+PDL:	BLOCK PDLLEN		; stack
+
+	.ENDPS
+
+	.PSECT CODE,CODORG	; pure code
+
+; Entry vector
+
+EVEC:	JRST WAKEMM		; START address
+	JRST WAKEMM		; REENTER address
+	BYTE (3) V%%WHO (9) V%%MAJ (6) V%%MIN (18) V%%ED
+EVECL==.-EVEC
+
+WAKEMM:	RESET%			; flush all I/O
+	MOVE P,[IOWD PDLLEN,PDL] ; init stack context
+	CALL $WAKE		; do all the work (that was hard, huh?)
+
+IFN MITSW,<			; nifty fork control in our EXEC?
+	MOVE 1,[.PRAST,,.FHSLF]	; yup, set our PRARG% block
+	MOVEI 2,[.PRKIL,,0]	; flush this fork when we halt
+	MOVEI 3,1		; one word of data
+	PRARG%			; stuff it into our PSB
+	 ERJMP .+1		; oh well, we tried
+>;IFN MITSW
+
+	HALTF%			; .BREAK 16,160000
+	JRST WAKEMM		; restart if continued somehow
+
+
+...LIT:	XLIST			; save trees during LIT
+	LIT			; generate literals
+	LIST
+
+	END <EVECL,,EVEC>	; The End

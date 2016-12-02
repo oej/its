@@ -1,0 +1,217 @@
+TITLE	ITAGS
+
+.decsav
+
+A=:1
+B=:2
+C=:3
+D=:4
+E=:5
+F=:6
+P=:17
+
+call=:pushj p,
+return=:popj p,
+
+itags:	move p,[-lpdl,,pdl-1]
+	movei a,0
+	rscan
+	 jsr error
+	movn c,a
+l1:	aojge c,nofile
+	pbin
+	cain a,^J
+	 jrst nofile
+	caie a,40
+	 jrst l1
+	movei a,.priin
+	hrroi b,file
+	sin
+	movei a,0
+	idpb a,b
+	movsi a,(gj%sht\gj%old)
+	hrroi b,file
+	gtjfn
+	 jsr error
+	movem a,ifile
+	move b,[<7_30.>\of%rd]
+	openf
+	 jsr error
+	movsi a,(gj%sht\gj%new\gj%fou)
+	hrroi b,file
+	gtjfn
+	 jsr error
+	movem a,ofile
+	move b,[<7_30.>\of%wr]
+	openf
+	 jsr error
+	setom iptr
+	setzm ibufc
+	setzm obufc
+	setzm tagsc
+	move a,[440700,,tags]
+	movem a,tagsp
+loop1:	call getc
+	caie a,^_
+	 jrst loop1
+loop2:	call getc
+	caie a,^J
+	 jrst loop2
+	push p,tagsc
+	push p,tagsp
+	move d,[440700,,[asciz "TAG TABLE:
+"]]
+loop3:	ildb e,d
+	jumpe e,wtags
+	call getc
+	call tagc
+	caie a,(e)
+	 cain a,40(e)
+	  jrst loop3
+loop4:	move d,[440700,,[asciz "NODE:"]]
+loop5:	ildb e,d
+	jumpe e,tag
+	call getc
+	cain a,^J
+	 jrst notag
+	call tagc
+	caie a,(e)
+	 cain a,40(e)
+	  jrst loop5
+	jrst loop4
+notag:	pop p,tagsp
+	pop p,tagsc
+	jrst loop1
+tag:	sub p,[2,,2]
+tag1:	call getc
+	caie a,",
+	 cain a,^I
+	  jrst etag
+	cain a,^M
+	 jrst etag
+	call tagc
+	jrst tag1
+etag:	movei a,177
+	call tagc
+	move a,iptr
+	call tagn
+	movei a,^M
+	call tagc
+	movei a,^J
+	call tagc
+	jrst loop1
+
+tagc:	idpb a,tagsp
+	aos tagsc
+	return
+
+tagn:	push p,b
+	idivi a,10.
+	jumpe a,tagn1
+	call tagn
+tagn1:	movei a,"0(b)
+	call tagc
+	pop p,b
+	return
+
+wtags:	pop p,tagsp
+	pop p,tagsc
+	call out
+	skipn tagsc
+	 jrst [	hrroi a,[asciz "Warning: no tags found.
+"]
+		psout
+		jrst loop6
+		]
+	move a,ofile
+	hrroi b,tags
+	movn c,tagsc
+	sout
+	setzm tagsc
+	move a,[440700,,tags]
+	movem a,tagsp
+loop6:	setzm obufc		; hack to prevout old tag table from being
+				; output
+	call getc
+	caie a,^_
+	 jrst loop6
+	jrst loop1
+
+
+getc:	sosge ibufc
+	 jrst getc1
+	ildb a,ibufp
+	aos iptr
+	sos obufc
+	return
+getc1:	call out
+	move a,ifile
+	move b,[440700,,buffer]
+	movem b,ibufp
+	movem b,obufp
+	movni c,lbuffer
+	sin
+	addi c,lbuffer
+	movem c,ibufc
+	jumpn c,getc
+
+eof:	call out
+	skipe tagsc
+	 jrst [	hrroi a,[asciz "Warning: no tag table found.
+"]
+		psout
+		jrst .+1
+		]
+	move a,ifile
+	closf
+	 tdn
+	move a,ofile
+	closf
+	 tdn
+	haltf
+	jrst .-1
+
+
+out:	skipn c,obufc
+	 return
+	move b,c
+	adjbp b,ibufp
+	move a,ofile
+	sout
+	setzm obufc
+	return
+
+
+nofile:	hrroi a,[asciz "Usage is ITAGS <filename>"]
+	psout
+	haltf
+	jrst itags
+
+error:	0
+	push p,a
+	hrroi a,[asciz "JSYS error return
+"]
+	psout
+	pop p,a
+	haltf
+	jrst @error
+
+	constants
+
+lpdl==20
+pdl:	block lpdl
+file:	block 20
+ifile:	block 1
+ofile:	block 1
+iptr:	block 1
+ibufc:	block 1
+ibufp:	block 1
+obufc:	block 1
+obufp:	block 1
+buffer:	block 512.
+lbuffer==512.*5
+tagsc:	block 1
+tagsp:	block 1
+tags:	block 0
+
+end itags

@@ -1,0 +1,165 @@
+!* [MIT-XX]PS:<SRA>WCCLIB.EMACS.2,  2-Apr-85 18:15:17, Edit by SRA!
+!* 
+ *  This library is based on the macro library used at Wesleyan
+ *  University for the TV dialect of TECO.  The code here was mostly
+ *  written by Doug Bigelow (Wesleyan) and Betsey Ramsey (AMS).
+ *!
+
+!~Filename~:! !Macros from WCC, converted from TV to EMACS!
+WCCLIB
+
+!Table of Contents:! !S Make a table of contents for MACRO programs!
+
+!**	Register B - back part of double subtitle	**!
+!**	Register C - current scan position		**!
+!**	Register J - holds major subtitle checksum	**!
+!**	Register M - minor subtitle number		**!
+!**	Register N - place to insert next line		**!
+!**	Register P - page number of current subtitle	**!
+!**	Register V - counts lines per page		**!
+!**	Register S - next subtitle number		**!
+
+  [0[1[2[3[a[b[c[j[m		    !* Save some q-regs!
+  @FT[Creating_table_of_contents,_please_wait...]
+  0[n 0[s			    !* Assume we start at top!
+  j:sSUBTTL__Table_of_ContentsSubttl	Table_of_Contents"N
+    0l @-f 	
+l  l .un l s qn,.k'		    !* If old table, delete it!
+  j<:stitleuniversal.tt."e   !* Find title!
+      fsdfn1:f6u1 0;'		    !* Isnt one, use our FN1!
+    .u0 0l .,q0:fb;"e		    !* Is one, check if in a comment!
+      q0j @f_	l fwx1 0;' !* Real title, snarf it!
+    q0j>			    !* Was in comment, keep looking!
+  qnj				    !* Back to where contents is!
+  i
+	SUBTTL__Table_of_contents_for_1
+
+;__________--_Section_--___________________________________________--_Page_--
+;
+				    !* Insert begining of title page!
+  qn"n				    !* If theres an edit history, say so!
+    i;__1.___Edit_history..................................................__1
+    %sw .u0 qnj i q0+1j'	    !* and put in a page break!
+  i;__ %s\			    !* Whatever number we are at!
+  .u0 1[p j<:s; .-q0; %p> q0j    !* Find what page we are on now!
+  i.___Table_of_contents.............................................
+ -:0l 3,qp\ l			    !* Comment ourself!
+  .un i -c			    !* Contents gets page to itself!
+				    !* Main loop!
+  <:ssubttl;		    !* Find next subtitle or page mark!
+    0,0a-"e %p!<!>'		    !* Page mark, count it and loop!
+    @f_	l		    !* Skip over whitespace!
+    .u0 :l z-.uc q0,.:fb_--_"n	    !* See if theres a minor subtitle!
+      z-.u1			    !* Yup, remember where delimiter is!
+      q0,.+fkf=j"n		    !* See if its a new catagory!
+        q0,.+fkxj 0um		    !* Yup, snarf it, init minor counter!
+	qnj i;__ %s\ i.	    !* Go insert begining of major title line!
+	qn+8-.:f"g1',_i	    !* Add some spaces, always at least one!
+	gj 13i 10i .un z-q1j'	    !* Put in title and crlf, back to subttl!
+      :x2 qnj i; 9,qs\ i. %m\	    !* Insert begining of minor title!
+      qn+17-.:f"g1',_i g2'	    !* Fill to tab stop, dump entry!
+    "#				    !* No minor subtitle!
+      :ij			    !* So clear major portion holder!
+      q0,.x1 qnj i;__ %s\ i.	    !* Type correct subtitle number!
+      qn+8-.:f"g1',_i g1'	    !* Add some spaces, dump entry!
+    qn+70-.f"g,.i 3,qp\	    !* Dots out to margin, page number!
+    13i 10i .un z-qcj		    !* CRLF, remember location, back to scan!
+    >				    !* End of loop!
+  qnj				    !* Loop completed, finish up the table!
+  i;
+;____________________(End_of_table_of_contents)
+
+
+!* Tell the patient user that we're finished!
+  @FTî[Finished]____________________________________________________
+  				    !* So go away!
+
+
+!Jump:! !S Jump to page given as argument!
+
+   [1 .[2 f[sstring		    !* Get arg, save . and search string!
+   j q1-1:s"n		    !* Look for FF, if we won!
+     q1:\[3 @FTNow_on_page_3'    !* Tell where we are now!
+    "# @FTNo_such_page q2j'	    !* Otherwise, warn and as we was!
+   				    !* Done!
+
+
+
+!Increment Version:! !S Update the file edit number!
+
+   .[1 [2 0[3 j			    !* Save location, find edit num!
+   :sVedit==:Vedit==Vedit=:Vedit="n  !* (ordering here important!
+      8[..e .u2 \u3 q2,.k q3+1\'    !* Found it, increment, raxix 8!
+    "# @FTVedit_not_found'	    !* Otherwise, kvetch!
+   q3				    !* Done, return new version number!
+
+
+!Edit History:! !S Update edit history!
+
+   m(m.mDate_Edit)		    !* Stamp at top of file!
+   f=ModeMACRO"e		    !* If we are editing MACRO code!
+     m(m.mIncrement_Version)f"n[0  !* Increment the version number!
+       j s; i{ 8[..e q0\ i}''    !* Put in edit number if we have it!
+   				    !* Done!
+
+
+!Prettyprint Dumper Directory:! !Dumper:! !S Prettify a DUMPER listing.
+If the variable DUMPER Maximum Filename Length is defined it is
+the maximum length allowed for filenames.  The default is 50.!
+
+   @ft[Converting_DUMPER_directory,_please_wait...]
+   50fo..qDUMPER_Maximum_Filename_Length[m !* Get max length!
+   0[s 0[p 0[c 0[t 0[n [0[1[2	    !* Save other Q-regs!
+   j<:s
+DDB; -l2k>			    !* Kill DDB lines!
+   j<:s; -d>			    !* And control-v!
+   j :svolid_"n		    !* See if its a labeled tape!
+       fwx0'			    !* Yup, snarf volid!
+     "#				    !* Nope...!
+       qBuffer_Filenamesf[dfile  !* Get filenames of this buffer!
+       fsdfn1:f6u0		    !* Snarf FN1!
+       f]dfile'		    !* Restore defaults!
+   j iDirectory_of_DUMPER_tape_0
+===============================
+
+
+
+   <				    !* Outer loop to process a saveset!
+     k :s,_; 0k 13i 10i	    !* Get rid of extraneous crap!
+!**  qc-40"g 12i'**!		    !* New page iff needed!
+     i[Saveset:_ :l -2s, i]
+
+File				    !* Begining of header!
+     qm-4,32i			    !* Some spaces!
+     iSize____Last_Written
+----				    !* More header!
+     qm-4,32i			    !* Spaces again!
+     i----____------------
+				    !* Rest of header!
+     0uc 0us 2k 1a-12"e 3k' 2k %n   !* Kill extra lines!
+     < .-z; 1a-13@;		    !* Inner loop to process one file line!
+       1a-12"e 3k' .u0 %c	    !* Kill more lines if page break!
+       @f	_k		    !* Kill leading whitespace!
+       @:f	_l	    !* Skip over the filename!
+       q0+qm-.f"g,32i'		    !* If reasonable filename, fill out line!
+         "#w 13i 10i qm,32i'	    !* Otherwise break the line nicely!
+       @f	_k		    !* Get rid of extra space!
+       2a--"e 32i' 12c i:	    !* Fix up date and time fields!
+       2:fwl \u2 -2:fwl :k	    !* Get file size and truncate line!
+       0l qm-1c 5,q2\ 3,32i	    !* Insert size field!
+       (q2+qs)us l		    !* Add to page count, next file!
+       >			    !* End of inner loop!
+     i
+Total_of_qs\i_pages_in_qc\i_files.
+
+				    !* Saveset summery line!
+     (qs+qp)up (qc+qt)ut	    !* Add in new values!
+     >				    !* End of outer loop!
+  zki
+
+Grand_total_of_qp\i_pages_in_qt\i_files,_qn\i_savesets.
+				    !* Fill in page and file counts!
+  1,8m(m.mtabify)		    !* Tabify!
+  @ftî[Finished]__________________________________________________
+				    !* Tell patient user!
+  				    !* Bye!

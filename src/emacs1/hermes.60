@@ -1,0 +1,138 @@
+
+!~FILENAME~:! !Library to load when called by HERMES.  !
+HERMES				    !* This must be compressed with IVORY.!
+
+!& Setup HERMES Library:! !S Special help for use with HERMES.
+Structural problem:  The setup function has to do those things which are done
+only once for setting up to use EMACS under Hermes.  Some other things have to
+be done each time EMACS is started by Hermes.  (Note:  Hermes always starts
+the fork, never continues it.)  Things done each time include visiting the
+file that holds the message draft.  Since the startup actions can include
+redisplay, we have to ensure that they happen AFTER ^R mode has been entered
+(otherwise the redisplay screws up).  Hence this arranges for ..L to bind the
+startup action (and code to restore the original fs^R Enter) to fs ^R Enter.
+In summary, this is necessary because on Setup it does ^R mode, then ..L and
+on Startup it does ..L, then ^R mode.  Clear?  !
+
+ [1				    !* Save a register.!
+ fsLispT"E '			    !* Only if actually called by HERMES.!
+ fsJName:f6u1 f~1HERMES"N '	    !* ...!
+
+ q..9 m.vPrimordial ..Lw	    !* Debuggery.!
+ fs^REnter m.vPrimordial fs^REnterw	!* ...!
+
+ q..L m.vOriginal ..Lw		    !* Save normal ..L here.!
+ @:i..L|  fs^R Enterm.vOriginal fs^REnter
+   @:i*/			!* arrange for & Edit to happen when!
+   qOriginal fs^REnterfs^R Enter	!* ^R mode is first entered each time!
+   m(fs^R Enter)w		!* restore ^R Enter value and execute it!
+   m(m.m& Edit Hermes Text)	!* then execute the Hermes startup!
+   /fs^R Enter			!* put all that into fs ^R Enter!
+   mOriginal ..L|		!* and prepend it to ..L so it runs each time!
+
+ m.m& Exit EMACS m.vMM & Original Exit EMACSw	!* Save normal exiter here.!
+ m.m& Exit to HERMES m.vMM & Exit EMACSw  !* Do our own first -- it will!
+					    !* ..call into the normal one.!
+
+ :iEditor Type[Hermes]	    !* Tell luser what is going on.!
+
+		       !* Add some customizing for message handling !
+                       !* but not too much or people get surprised.!
+ fs:ej page[1			!*  save this in case we want to throw it away!
+ 1:< m(m.mLoad Library)NOVICE	 >"n	!* set up for NOVICE handling!
+   q1fs:ej page' ]1		!* if load fails (from a throw), flush NOVICE!
+ qParagraph Delimiteru1
+ :iParagraph Delimiter1-   !* Add hyphen to para delim list.!
+ :i*fo..qNovice Reminderu1	!* 1: Reminder printer, if any!
+ @:i*|1@ft
+Save and exit with C-X C-Z; Abort with M-X HERMES Abort<cr>.
+0fsechoactivew|m.vNovice Reminder	!* extend reminder!
+
+ m(m.m& Edit HERMES Text)	!* However, this time we must call this!
+				!* manually, since ..L has already been!
+				!* nabbed by the init file and we are!
+				!* already in ^R mode.!
+
+ 				    !* Done with setup.!
+
+!& Edit HERMES Text:! !S Setup on entry from superior HERMES.
+Runs every time Hermes starts EMACS.  Hermes always starts the fork, never
+continues it.  Calls into standard ..L when this finishes.  This means it
+shouldn't be doing any redisplay.  !
+ [1				    !* Save a register.!
+ fsLispT"E '			    !* Only if actually called by HERMES.!
+ fsJName:f6u1 f~1HERMES"N '	    !* ...!
+
+ fsTop Line"n			!* already in Window 2!
+   f~Buffer NameHERMES"e	!* but this is the mail buffer in W2!
+     1m(m.m^R One Window)w'	!* so make it use the whole screen!
+   m(m.m^R Other Window)w'	!* Brand X buffer in W2, so ensure mail in W1!
+ m(m.mSelect Buffer)*Hermes*	    !* Select special buffer.!
+ 0fsModifiedw 0fsXModifiedw	    !* Just in case it is being reused.!
+ 1m.lAuto Save Default		    !* cant use std autosave for this buffer!
+ :i*DSK:TEMPORARY-HERMES-BUFFER.HRMf[DFilew	    !* main part of name!
+ fsHSnamefsDSnamew		    !* adjust to get login structure !
+ fsDFilem.lAuto Save Filenames    !* set the name for saving!
+ f]DFile
+ @fsCCLFNameu1			    !* Pick up name of temp file,!
+ m(m.mVisit File)1		    !* and visit it.!
+ m(m.mFind Starting Place)w	    !* try to be clever about the cursor!
+ f~ModeText"N m(m.mText Mode)'  !* Set Text mode.!
+
+ 				    !* All done.!
+
+!Find Starting Place:! !C Position cursor to probably right spot.
+Try to be clever about placing cursor, depending on whether there are any empty
+header fields or other good candidates.  Positions after TO: or after any other
+empty header field if To: is full or missing.  In the case of a Reply, it goes
+to the beginning of the Text field if no headers are available.  In all other 
+cases, it sits tight at the top of the buffer.  !
+ [0
+ 1<bj 0,1a--"e 0;'		!* ignore this if buffer starts with -!
+   :s
+-----;				!* bound search to header fields!
+   0l .u0			!* 0: end of headers!
+				!* NOTE: preserve invisible trailing space!
+   b,.:fbTo: 
+"l 0:l'			!* move cursor to possible start of input!
+				!* NOTE: preserve invisible trailing space!
+   "# b,.:fb : 
+"l 0:l'			!* either To: or first apparent emptyfield!
+   "#				!* no empty fields so look for other poss!
+      b,q0:fbIn-Reply-To: "l	!* if reply, go after separator!
+        :s-----
+"e bj' 0; '			!* reply but no separator, stay at top!
+''				!* still at top if nothing reasonable!
+  >
+ .( q0,z:fbBegin forwarded message"l	!* looks like forward!
+    q0j				!* open a line for typing before the tab!
+    l i
+
+   '')j				!* back to desired position!
+ .
+
+!& Kill HERMES Library:! !S Make library unkillable.!
+
+ [1				    !* Save a register.!
+ fsLispT"E '			    !* Only if not called by HERMES.!
+ fsJName:f6u1 f~1HERMES"N '	    !* ...!
+
+ :i*You cannot kill the HERMES library fsErrw	!* Beep if attempt to kill.!
+
+!& Exit to HERMES:! !S Save the HERMES buffer.!
+
+ ff"E			    !* Only save if no argument.!
+    fsTop Line"n m(m.m^R Other Window)'	!* ensure W1!
+    1,(:i**Hermes*)m(m.m& Find Buffer)"l :m(m.mHermes Abort)'
+    m(m.mSelect Buffer)*Hermes*	!* select message buffer,!
+    1fsModifiedw 1fsXModified	    !* buffer is always different from CDraft!
+    m(m.m^R Save File)		    !* so always save the Hermes file!
+    1fsModififedw 1fsXModifiedw'   !* force autosaving too for safety!
+
+ f:m(m.m& Original Exit EMACS)   !* Call into normal exiter.!
+
+!HERMES Abort:! !C Call to abandon HERMES edit.!
+
+ 0fsExit			    !* Exit with magic number.!
+
+ :i*HERMES interface is broken fsErr	!* This will never be executed.!

@@ -1,0 +1,31 @@
+!~Filename~:! !Hack to flush .ARPA fields from Babyl reply headers.
+Bug-reports: Carter@RUTGERS.
+Code from Tony <Li@RUTGERS>.
+!
+FLARPA				     !* Purify with IVORY!
+
+!& Setup FLARPA Library:! !S Initialize .ARPA deletion routine.
+If user already has a Babyl R Hook,
+grab it and tack the code to flush
+.ARPA fields onto the end.  If not,
+build him a new hook from scratch.
+!
+0FO..QMAIL READER LIBRARY:"E	     !* If var Mail Reader Library exists,!
+  F~MAIL READER LIBRARYBABYL"E    !* and is set to use Babyl, then!
+    1 M.V Flarpa Flag		     !* make flag which may be useful later,!
+    F[BBIND			     !* build the hook in a buffer,!
+	   1:<GBABYL R HOOK>	     !* get whatever is already there,!
+	   @I|			     !* add the code to!
+	      J<:S		     !* search for! 
+	         Re:.ARPA+2"E    !* Re: or .ARPA,!
+		   -5D'		     !* .ARPA found, delete backwards,!
+		     "#1;'>	     !* loop till done!
+	      ZJ		     !* and go to end of buffer;!
+	     |HX*M.V BABYL R HOOK   !* instantiate the hook.!	 
+    F]BBIND''
+
+
+     !* Local Modes:!
+     !* Mode:TECO!
+     !* Comment Column:37!
+     !* End:!

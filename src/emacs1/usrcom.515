@@ -209,8 +209,8 @@ a Lisp atom.  This affects which characters are delimiters.!
     0
 
 !Overwrite Mode:! !C Make printing characters overwrite existing text.
-A positive argument turns Overwrite Mode mode on; a zero or negative,
-argument turns it off.  With no argument, the mode is toggled.
+A positive argument turns Overwrite mode on;
+zero or negative, turns it off.  With no argument, the mode is toggled.
 In overwrite mode, printing characters replace a character
 instead of pushing the following characters over to the right.
 Rubout replaces the preceding character with a space.
@@ -401,6 +401,7 @@ Give the TECO search string to search for as a string argument.!
 Give the TECO search string to search for as a string argument.!
 
     1,fPattern:_ f[ s string    !* Initialize search default!
+    fq(fs s string)"e 0'
     .( < :s;			    !* Find next line containing string!
 	 0kk>  )j .,z		    !* and kill it.!
 
@@ -1020,5 +1021,4 @@ some internal wasted space is reclaimed.!
     FS OSTECO"N Q0*2u0'
     Q0:@= @FT_pages_available.
     0FS ECHO ACT
-    0
- 
+    

@@ -1,0 +1,37 @@
+!* -*-TECO-*- *!
+
+!~Filename~:! !PUB mode and PUB Text mode.!
+PUB
+
+!PUB Mode:! !C Sets things up for editing PUB Code.!
+    M(M.M &_Init_Buffer_Locals)    !* See comment at top of file.!
+    1,32 M.L Comment_Column
+    1,(:I*<<_ !>>!) M.L Comment_Start
+    1,(!<<!:I*_>>) M.L Comment_End
+    1,(:I*+2) M.L Comment_Rounding
+    1,(:I*) M.L Paragraph_Delimiter
+    1,0M.L Display_Matching_Paren
+    1M(M.M&_Set_Mode_Line) PUB 
+
+!PUB Text Mode:! !C Sets up things for editing Text Files for PUB.!
+
+    M(M.M &_Init_Buffer_Locals)    !* See comment at top of file.!
+    M.Q ..D
+    0FO..Q Text_..D F"N U..D'	    !* Select the Text-mode syntax table!
+      "# W :G..D U..D		    !* creating it if doesn't exist.!
+	Q..D M.V Text_..D
+	5*. :F..D __	    !* . isn't part of a word (or a "sexp").!
+    !"! 5*' :F..D AA	    !* ' is part of a word...!
+        5*8 :F..D AA		    !* BS is part of a word...!
+	5*_ :F..D AA	    !* Underlining is part of a word...!
+	'
+    1,(M.M ^R_Tab_to_Tab_Stop) M.Q I
+    1,0M.L Display_Matching_Paren
+    1,0 M.LComment_Column
+    1,(:I*+1) M.LComment_Rounding
+    1,(:I*
+    .<<_!>>!) m.lComment_Begin
+    1,(:I*<<_!>>!) m.lComment_Start
+    1,(!<<!:I*_>>) M.LComment_End
+    1M(M.M&_Set_Mode_Line) PUB_Text 
+    

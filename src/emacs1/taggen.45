@@ -3,7 +3,19 @@
 !~Filename~:! !Macros for supporting Emacs TAGS file setup!
 TAGGEN
 
-!Generate Tags File:! !S Make updates to an existing TAGS file as needed!
+!Generate Tags File:! !S Make updates to an existing TAGS file as needed
+Reads a string argument of a TAGS file to be updated. The file must be in
+standard tags file format... eg,
+   <filename1>
+   <digits>,<language>
+   <optional-outdated-tags-text-which-may-extend-over-more-than-one-line>
+   <control-underscore>
+   <filename2>
+   <digits>,<language>
+   <optional-outdated-tags-text-which-may-extend-over-more-than-one-line>
+   <control-underscore>
+   ...etc...
+!
 
   f[dfile			    !* Bind Teco Default File		!
   f[bbind			    !* Bind temp buffer			!
@@ -199,7 +211,7 @@ m.m &_Tags_Default_Snarf[S	    !* Get temp				    !
 > 				    !* Loop and return			    !
 
 
-!& Tags Process MIDAS Buffer:! !& Process tags for buffer of MIDAS or MACRO-10!
+!& Tags Process MIDAS Buffer:! !& Process tags for buffer of MIDAS code!
 
 !*                                                                           *!
 !*   In MIDAS code, a tag is any symbol that occurs at the beginning         *!
@@ -214,7 +226,20 @@ m.m &_Tags_Default_Snarf[S	    !* Get temp				!
 				    !* Return				!
 
 
-!& Tags Process FAIL Buffer:! !& Process tags for buffer of MIDAS or MACRO-10!
+!& Tags Process MACRO Buffer:! !& Process tags for MACRO assembly language!
+
+!*                                                                           *!
+!* This is copied intact from the MIDAS code.                                *!
+!*                                                                           *!
+
+m.m &_Tags_Default_Snarf[S	    !* Get temp				!
+<:s; r fwl		    !* Go over first token		!
+ 1af:=:"l c  mS'		    !* If token ends in : or =, take it	!
+>				    !* Loop				!
+				    !* Return				!
+
+
+!& Tags Process FAIL Buffer:! !& Process tags for FAIL assembly language!
 
 !*                                                                           *!
 !*   FAIL code is like MIDAS code, except that one or two 's or "^"'s      *!
@@ -253,3 +278,39 @@ m.m &_Tags_Default_Snarf[S	    !* Get temp				!
   1af:=:"l c  mS''		    !* If token ends in : or =, take it	!
 > 				    !* Loop and return			!
 
+
+!Make Tags File:! !S Make a skeleton tags file for other routines to fill in.
+Asks for output filename (the new TAGS file), and a list of (possibly wild)
+input filespecs.  Terminate list by typing just CR.
+!
+
+ [0 [1 [2 [3 [4			    !* Save q-regs!
+ f[ D File			    !* Save default filespec!
+ f[ B Bind			    !* Scratch buffer!
+ f6TAGS fs d fn2		    !* Default ext is tags!
+ :i*Output_tag_file:_,400001.:et   !* Get output filespec!
+ :g(fs d file)u4 q4u1		    !* Save it!
+ f6  fs d fn2		    !* Default extension is nul!
+ <				    !* Loop to get input files!
+   0fs d version q1u2		    !* Default to the highest generation!
+   :i*Files:_,100.:et		    !* Get files to examine!
+   :g(fs d file)u1		    !* Get name we just parsed!
+   f=12@;			    !* Exit if were the same (user typed CR)!
+   1,111110000001.ez1	    !* Put listing in buffer!
+   >				    !* Got all input filespecs!
+ j <.-z;			    !* For whole list!
+   .u0 :l			    !* Remember where line starts!
+   -2s. c .u1 s. .-1u2	    !* Locate extension field!
+   :k 0\			    !* Change generation to zero!
+   :i3NONE			    !* Default is NONE mode!
+   q1,q2f=MAC"e   :i3MACRO'	    !* Midas assembler!
+   q1,q2f=MID"e   :i3MIDAS'	    !* Macro assembler!
+   q1,q2f=TECO"e  :i3TECO'	    !* Raw Teco!
+   q1,q2f=EMACS"e :i3TECO'	    !* Emacs Teco!
+   13i 10i i, g3 13i 10i i	    !* Rest of skeleton!
+   .+7-q0u1			    !* How long, including count and CRLF!
+   -l q1\ fku0 q0c q0+5,0i	    !* Put in length field, left fill zeros!
+   2l>				    !* Done with loop!
+ e\ et4 :ew hp :ef		    !* Dump the tag table!
+ m(m.mGenerate_Tags_File)4	    !* Flesh out skeleton!
+ 				    !* Bye!
