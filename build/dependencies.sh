@@ -10,7 +10,7 @@ install_linux() {
 
 install_osx() {
     brew update > /dev/null
-    brew upgrade expect
+    brew install expect
     if test "$EMULATOR" = simh; then
 	brew install simh
     fi
