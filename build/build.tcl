@@ -856,6 +856,14 @@ expect ":KILL"
 #respond "_" "\032"
 #type ":kill\r"
 
+#respond "*" ":complr\r"
+#respond "_" "math;kermit\r"
+#respond "_" "lisp;_lspsrc;mlsub\r"
+#respond "_" "\032"
+#type ":kill\r"
+#respond "*" ":lisp math; kermit dumper\r"
+#respond "*" "(kermit-dump)"
+
 # NICNAM
 respond "*" ":midas sys2;ts nicnam_sysen3;nicnam\r"
 expect ":KILL"
