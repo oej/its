@@ -3,7 +3,7 @@ dist: trusty
 sudo: required
 env:
   - EMULATOR=simh
-  - EMULATOR=klh10
+  # EMULATOR=klh10
 install: sh -ex build/dependencies.sh install_${TRAVIS_OS_NAME:-linux}
 script: make
 notifications:
