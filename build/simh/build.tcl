@@ -22,8 +22,20 @@ proc start_its {} {
     uplevel #0 {spawn pdp10 build/simh/boot}
 }
 
+proc start_ka10 {} {
+    uplevel #0 {spawn ../ka10-simh/BIN/ka10 build/ka10/boot}
+}
+
+proc start_magdmp {} {
+    uplevel #0 {spawn ../ka10-simh/BIN/ka10 build/ka10/init}
+}
+
+proc start_ka_dskdmp {} {
+    uplevel #0 {spawn ../ka10-simh/BIN/ka10 build/ka10/boot}
+}
+
 proc mount_tape {file} {
-    respond "sim>" "at tu0 $file\r"
+    respond "sim>" "at mta0 $file\r"
     respond "sim>" "c\r"
 }
 

@@ -22,17 +22,29 @@ KLH10=${PWD}/tools/klh10/tmp/bld-ks-its/kn10-ks-its
 SIMH=${PWD}/tools/simh/BIN/pdp10
 ITSTAR=${PWD}/tools/itstar/itstar
 WRITETAPE=${PWD}/tools/tapeutils/tapewrite
+MAGFRM=${PWD}/tools/dasm/magfrm
 
 H3TEXT=$(shell cd build; ls h3text.*)
 
-all: out/rp0.dsk tools/supdup/supdup
+all: out/rp0.dsk tools/supdup/supdup out/rp03.2 out/rp03.3
 
-out/rp0.dsk: build/simh/init out/minsys.tape out/salv.tape out/dskdmp.tape build/build.tcl out/sources.tape build/$(EMULATOR)/stamp
+out/rp0.dsk: build/simh/init out/minsys.tape out/salv.tape out/dskdmp.tape build/build.tcl out/sources.tape build/$(EMULATOR)/stamp out/ka-minsys.tape out/magdmp.tap
 	PATH=${PWD}/tools/simh/BIN:$$PATH expect -f build/$(EMULATOR)/build.tcl $(IP) $(GW)
+
+out/rp03.2 out/rp03.3: out/ka-minsys.tape out/magdmp.tap out/rp0.dsk
+	echo foo
+
+out/magdmp.tap: $(MAGFRM)
+	cd bin/boot.ka; $(MAGFRM) @.ddt @.salv > ../../$@
 
 out/minsys.tape: $(ITSTAR)
 	mkdir -p out
 	cd bin; $(ITSTAR) -cf ../$@ $(MINSYS)
+
+out/ka-minsys.tape: $(ITSTAR)
+	mkdir -p out
+	cd ka; $(ITSTAR) -cf ../$@ _
+	cd bin; $(ITSTAR) -rf ../$@ sys
 
 out/sources.tape: $(ITSTAR) build/$(EMULATOR)/stamp src/syshst/$(H3TEXT)
 	mkdir -p out
@@ -100,6 +112,9 @@ $(ITSTAR):
 
 $(WRITETAPE):
 	cd tools/tapeutils; make
+
+$(MAGFRM):
+	cd tools/dasm; make
 
 tools/supdup/supdup:
 	cd tools/supdup; make

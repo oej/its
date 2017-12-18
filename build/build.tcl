@@ -31,6 +31,10 @@ proc pdset {} {
     type [timestamp -seconds $t -format "%y%m%dD"]
     type [timestamp -seconds $t -format "%H%M%ST"]
     type "!."
+    if 1 {
+	sleep 1
+        type "Q"
+    } else {
     expect "DAYLIGHT SAVINGS" {
         type "N"
 	respond "IT IS NOW" "Q"
@@ -38,6 +42,7 @@ proc pdset {} {
         type "Q"
     } "ITS revived" {
         type "Q"
+    }
     }
     expect ":KILL"
 }
@@ -82,6 +87,7 @@ expect_before timeout abort
 set ip [ip_address [lindex $argv 0]]
 set gw [ip_address [lindex $argv 1]]
 
+if 0 {
 start_nsalv
 
 respond "\n" "mark\033g"
@@ -142,6 +148,10 @@ respond "*" ":login db\r"
 sleep 1
 type $emulator_escape
 mount_tape "out/sources.tape"
+expect "CNLJL"
+expect "CONSZ"
+sleep 1
+type "\033P"
 type ":dump\r"
 respond "_" "reload "
 respond "ARE YOU SURE" "y"
@@ -153,80 +163,130 @@ expect ":KILL"
 
 respond "*" ":print sysbin;..new. (udir)\r"
 type ":vk\r"
-respond "*" ":midas sysbin;_midas;midas\r"
-expect ":KILL"
-respond "*" ":job midas\r"
-respond "*" ":load sysbin;midas bin\r"
-respond "*" "purify\033g"
-respond "CR to dump" "\r"
-respond "*" ":kill\r"
 
-respond "*" ":midas sysbin;_sysen1;ddt\r"
+# We don't need to rebuild MIDAS.
+#respond "*" ":midas sysbin;_midas;midas\r"
+#expect ":KILL"
+#respond "*" ":job midas\r"
+#respond "*" ":load sysbin;midas bin\r"
+#respond "*" "purify\033g"
+#respond "CR to dump" "\r"
+#respond "*" ":kill\r"
+
+respond "*" ":midas /l sysbin;_sysen1;ddt\r"
 expect ":KILL"
 respond "*" ":job ddt\r"
 respond "*" ":load sysbin;ddt bin\r"
 respond "*" "purify\033g"
 respond "*" ":pdump sys;atsign ddt\r"
 respond "*" ":kill\r"
+respond "*" ":copy sysbin; ddt list, sys;\r"
 
-respond "*" ":midas .;_system;its\r"
-respond "MACHINE NAME =" "DB\r"
-respond "Configuration?" "RP06\r"
+# Make a KA ITS.
+respond "*" ":midas /l .;_system;its\r"
+respond "MACHINE NAME =" "MLKA\r"
 expect ":KILL"
 
-respond "*" ":midas .;@ ddt_system;ddt\r"
-respond "cpusw" "3\r"
-respond "New One Proceed" "1\r"
+# Make a KA exec DDT.
+respond "*" ":midas /l .;_system;ddt\r"
+respond "cpusw=" "0\r"
+respond "ndsk=" "0\r"
+respond "dsksw=" "0\r"
 expect ":KILL"
+respond "*" ":delete .; @ ddt\r"
+respond "*" ":rename .;ddt bin, @ ddt\r"
 
-respond "*" ":midas .;_kshack;nsalv\r"
-respond "Which machine?" "KSRP06\r"
+# Make an KA-ML SALV.
+respond "*" ":midas /l .;_system;salv\r"
+respond "Run under time-sharing?" "N\r"
+respond "Which machine?" "ML\r"
 expect ":KILL"
+respond "*" ":rename .;salv bin, @ salv\r"
 
-respond "*" ":midas .;_system;dskdmp\r"
+# Load ITS together with DDT and SALV, and dump it.
+respond "*" "its\033j"
+respond "*" "\0331l .; @ ddt\r"
+respond "*" "\033\0331l .; @ salv\r"
+respond "*" "\033\033l .; its bin\r"
+respond "*" "\033y .; @ its\r"
+respond "*" ":kill\r"
+
+# Make a KA DSKDMP.
+respond "*" ":midas /l .;_system;dskdmp\r"
 expect "Configuration"
-respond "?" "ksrp06\r"
-respond "Assemble BOOT?" "no\r"
+respond "?" "ASK\r"
+respond "HRIFLG=" "N\r"
+respond "BOOTSW=" "N\r"
+respond "RP06P=" "N\r"
+respond "RP07P=" "N\r"
+respond "RM03P=" "N\r"
+respond "RM80P=" "N\r"
+respond "RH10P=" "N\r"
+respond "DC10P=" "N\r"
+respond "NUDSL=" "250.\r"
+respond "KS10P=" "N\r"
+respond "KL10P=" "N\r"
 expect ":KILL"
+respond "*" ":rename .;dskdmp bin, @ dskdmp\r"
 
-respond "*" ":midas .;bt_system;dskdmp\r"
+# DSKDMP paper tape.
+respond "*" ":midas /l sys;dskdmp rim_system;dskdmp\r"
 expect "Configuration"
-respond "?" "ksrp06\r"
-respond "Assemble BOOT?" "yes\r"
+respond "?" "ASK\r"
+respond "HRIFLG=" "Y\r"
+respond "BOOTSW=" "N\r"
+respond "RP06P=" "N\r"
+respond "RP07P=" "N\r"
+respond "RM03P=" "N\r"
+respond "RM80P=" "N\r"
+respond "RH10P=" "N\r"
+respond "DC10P=" "N\r"
+respond "NUDSL=" "250.\r"
+respond "KS10P=" "N\r"
+respond "KL10P=" "N\r"
 expect ":KILL"
 
-respond "*" ":midas sysbin;_kshack;ksfedr\r"
-expect ":KILL"
-respond "*" ":delete sys;ts ksfedr\r"
-respond "*" ":link sys;ts ksfedr,sysbin;ksfedr bin\r"
+# Don't need the DSKDMP boot block.
+#respond "*" ":midas .;bt_system;dskdmp\r"
+#expect "Configuration"
+#respond "?" "ksrp06\r"
+#respond "Assemble BOOT?" "yes\r"
+#expect ":KILL"
 
-respond "*" ":ksfedr\r"
-respond "!" "write\r"
-respond "Are you sure" "yes\r"
-respond "Which file" "bt\r"
-expect "Input from"
-sleep 1
-respond ":" ".;bt bin\r"
-respond "!" "quit\r"
-expect ":KILL"
+# Dont need KSFEDR.
+#respond "*" ":midas sysbin;_kshack;ksfedr\r"
+#expect ":KILL"
+#respond "*" ":delete sys;ts ksfedr\r"
+#respond "*" ":link sys;ts ksfedr,sysbin;ksfedr bin\r"
 
-shutdown
-start_dskdmp
-respond "DSKDMP" "l\033ddt\r"
-expect "\n"; type "t\033dskdmp bin\r"
-expect "\n"; type "\033g"
-respond "DSKDMP" "t\033its bin\r"
-expect "\n"; type "\033u"
-respond "DSKDMP" "m\033nsalv bin\r"
-expect "\n"; type "d\033nits\r"
-expect "\n"; type "nits\r"
-expect "\n"; type "\033g"
-maybe_pdset
+#respond "*" ":ksfedr\r"
+#respond "!" "write\r"
+#respond "Are you sure" "yes\r"
+#respond "Which file" "bt\r"
+#expect "Input from"
+#sleep 1
+#respond ":" ".;bt bin\r"
+#respond "!" "quit\r"
+#expect ":KILL"
 
-respond "*" ":login db\r"
-sleep 1
-type ":rename .;@ its, .;@ oits\r"
-respond "*" ":rename .;@ nits, .;@ its\r"
+# Don't need to dump a new ITS.
+#shutdown
+#start_dskdmp
+#respond "DSKDMP" "l\033ddt\r"
+#expect "\n"; type "t\033dskdmp bin\r"
+#expect "\n"; type "\033g"
+#respond "DSKDMP" "t\033its bin\r"
+#expect "\n"; type "\033u"
+#respond "DSKDMP" "m\033nsalv bin\r"
+#expect "\n"; type "d\033nits\r"
+#expect "\n"; type "nits\r"
+#expect "\n"; type "\033g"
+#maybe_pdset
+
+#respond "*" ":login db\r"
+#sleep 1
+#type ":rename .;@ its, .;@ oits\r"
+#respond "*" ":rename .;@ nits, .;@ its\r"
 
 respond "*" ":print sys1;..new. (udir)\r"
 type ":vk\r"
@@ -239,8 +299,139 @@ type ":vk\r"
 respond "*" ":print teach;..new. (udir)\r"
 type ":vk\r"
 
-respond "*" ":midas sysbin;_.teco.;teco\r"
+# Make DSKDMP paper tape.
+
+# Make MAGDMP paper tape.
+
+# Make MAGDMP magtape.
+# With: DDT, SALV, DSKDMP.
+
+# Some cleaning.
+respond "*" ":delete .; .fefs. pk0000\r"
+respond "*" ":delete .; bt rp06\r"
+respond "*" ":delete .; dskdmp rp06\r"
+respond "*" ":delete .; its rp06\r"
+respond "*" ":delete .; salv rp06\r"
+respond "*" ":delete .; ram ram\r"
+respond "*" ":delete sys; ts ksfedr\r"
+respond "*" ":delete sys; ts dec\r"
+respond "*" ":delete sys; ts fail\r"
+
+respond "*" ":copy sys;ts dump, sysbin;ts dump\r"
+respond "*" ":midas /l sys;ts dump_syseng;dump\r"
+respond "WHICH MACHINE?" "ML\r"
 expect ":KILL"
+
+# Want LF.
+respond "*" ":midas sys;ts find_sysen2;find\r"
+expect ":KILL"
+respond "*" ":link sys;ts lf,sys;ts find\r"
+type ":vk\r"
+
+# Make KA minsys tape.
+#respond "*" $emulator_escape
+#create_tape "out/ka-minsys.tape"
+#type ":sysbin;dump\r"
+#respond "_" "dump links\r"
+#respond "FILE=" ".; * *\r"
+#respond "FILE=" "SYS; * *\r"
+#respond "FILE=" "\r"
+#respond "TAPE NO=" "0\r"
+#expect "TAPES  WRITE"
+#respond "_" "quit\r"
+#expect ":KILL"
+
+# Early exit.  We don't need the rest for now.
+shutdown
+quit_emulator
+}
+
+start_magdmp
+
+expect "MAGDMP\r\n"; send "l\033ddt\r"
+expect "\n"; send "t\033salv\r"
+respond "\n" "mark\033g"
+respond "UNIT #" "0"
+respond "#0?" "y"
+respond "NO =" "2\r"
+expect -timeout 300 "VERIFICATION"
+respond "ALLOC =" "3000\r"
+respond "PACK # =" "2\r"
+respond "PACK ID =" "2\r"
+respond "DDT" "mark\033g"
+respond "UNIT #" "1"
+respond "#1?" "y"
+respond "NO =" "3\r"
+expect -timeout 300 "VERIFICATION"
+respond "ALLOC =" "3000\r"
+respond "PACK # =" "3\r"
+respond "PACK ID =" "3\r"
+respond "DDT" "tran\033g"
+respond "UNIT #" "0"
+respond "OK?" "y"
+expect -timeout 300 EOT
+respond "DDT" $emulator_escape
+quit_emulator
+
+start_ka_dskdmp
+
+respond "DSKDMP" "its\r"
+expect "\n"; type "\033g"
+pdset
+respond "*" ":login db\r"
+sleep 1
+
+#type $emulator_escape
+#mount_tape "out/sources.tape"
+#expect "CONSZ"
+#sleep 1
+#type "\033P"
+#sleep 1
+type ":dump\r"
+respond "_" "reload "
+respond "ARE YOU SURE" "y"
+respond "\n" "links crdir\r"
+respond "FILE=" "*;* *\r"
+expect -timeout 3000 "E-O-T"
+respond "_" "quit\r"
+expect ":KILL"
+
+respond "*" ":print sys1;..new. (udir)\r"
+type ":vk\r"
+respond "*" ":print sys2;..new. (udir)\r"
+type ":vk\r"
+respond "*" ":print sys3;..new. (udir)\r"
+type ":vk\r"
+respond "*" ":print cstacy;..new. (udir)\r"
+type ":vk\r"
+respond "*" ":print teach;..new. (udir)\r"
+type ":vk\r"
+
+respond "*" ":print sysbin;..new. (udir)\r"
+type ":vk\r"
+
+respond "*" ":midas sysbin;_midas;midas\r"
+expect ":KILL"
+respond "*" ":job midas\r"
+respond "*" ":load sysbin;midas bin\r"
+respond "*" "purify\033g"
+respond "CR to dump" "\r"
+sleep 2
+respond "*" ":kill\r"
+
+respond "*" ":midas sysbin;_sysen1;ddt\r"
+expect ":KILL"
+respond "*" ":job ddt\r"
+respond "*" ":load sysbin;ddt bin\r"
+respond "*" "purify\033g"
+respond "*" ":pdump sys;atsign ddt\r"
+respond "*" ":kill\r"
+
+respond "*" ":midas sysbin;_.teco.;teco\r"
+type ":midas sysbin;_.teco.;teco\r"
+expect ":KILL"
+
+if 0 {
 respond "*" ":job teco\r"
 respond "*" ":load sysbin;teco bin\r"
 sleep 2
@@ -328,6 +519,7 @@ respond "*" ":emacs\r"
 expect ":KILL"
 respond "*" ":link teach;ts emacs,emacs;tstch >\r"
 type ":vk\r"
+}
 
 # nsalv, timesharing version
 respond "*" ":midas sys1;_kshack;nsalv\r"
@@ -356,7 +548,7 @@ respond "*" ":midas sys1;ts magfrm_syseng;magfrm\r"
 expect ":KILL"
 
 respond "*" ":midas sysbin;_syseng;dump\r"
-respond "WHICH MACHINE?" "DB\r"
+respond "WHICH MACHINE?" "ML\r"
 expect ":KILL"
 respond "*" ":delete sys;ts dump\r"
 respond "*" ":link sys;ts dump,sysbin;dump bin\r"

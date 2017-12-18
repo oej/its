@@ -1,5 +1,6 @@
 *~
 /out
+/tmp
 /start
 /build/*/stamp
 /build/klh10/dskdmp.ini
