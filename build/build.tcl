@@ -184,7 +184,7 @@ respond "*" ":copy sysbin; ddt list, sys;\r"
 
 # Make a KA ITS.
 respond "*" ":midas /l .;_system;its\r"
-respond "MACHINE NAME =" "MLKA\r"
+respond "MACHINE NAME =" "ML\r"
 expect ":KILL"
 
 # Make a KA exec DDT.
