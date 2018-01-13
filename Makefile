@@ -43,7 +43,7 @@ out/minsys.tape: $(ITSTAR)
 
 out/ka-minsys.tape: $(ITSTAR)
 	mkdir -p out
-	cd ka; $(ITSTAR) -cf ../$@ _
+	cd ka; $(ITSTAR) -cf ../$@ _ sys
 	cd bin; $(ITSTAR) -rf ../$@ sys
 
 out/sources.tape: $(ITSTAR) build/$(EMULATOR)/stamp src/syshst/$(H3TEXT)
