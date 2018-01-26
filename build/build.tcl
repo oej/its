@@ -1211,6 +1211,14 @@ respond "*" ":midas sys3;ts create_syseng;create\r"
 expect ":KILL"
 respond "*" ":link sys1;ts plan,sys3;ts create\r"
 
+respond "*" ":midas /t sysbin;_syseng;pt\r"
+respond "end input with ^C" "rim10\r"
+respond "\n" "nosyms\r"
+respond "\n" "pi==4\r"
+respond "\n" "tty==120\r"
+respond "\n" "ptr==104\r"
+respond "\n" "\003"
+
 # PTY
 respond "*" ":midas sys1;ts pty_sysen1;pty\r"
 expect ":KILL"
