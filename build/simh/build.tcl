@@ -26,11 +26,14 @@ proc start_ka10 {} {
     uplevel #0 {spawn ../ka10-simh/BIN/ka10 build/ka10/boot}
 }
 
-proc start_magdmp {} {
+proc start_ka_salv {} {
     uplevel #0 {spawn ../ka10-simh/BIN/ka10 build/ka10/init}
+    expect "MAGDMP\r\n"; send "l\033ddt\r"
+    expect "\n"; send "t\033salv\r"
 }
 
 proc start_ka_dskdmp {} {
+    quit_emulator
     uplevel #0 {spawn ../ka10-simh/BIN/ka10 build/ka10/boot}
 }
 
