@@ -1,5 +1,6 @@
 set cpu its
 set cpu 512k
+set cpu idle
 set pd off
 at ptr bin/boot.ka/dskdmp.rim
 at mta0 out/sources.tape
