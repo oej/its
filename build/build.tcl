@@ -198,7 +198,6 @@ type ":vk\r"
 respond "*" ":midas sysbin;_.teco.;teco\r"
 expect ":KILL"
 
-if 0 {
 respond "*" ":job teco\r"
 respond "*" ":load sysbin;teco bin\r"
 sleep 2
@@ -208,6 +207,7 @@ respond "TECPUR" "\r"
 respond "*" ":kill\r"
 respond "*" ":link sys3;ts teco,.teco.;tecpur >\r"
 
+if 0 {
 respond "*" ":link sys2;ts emacs,emacs;ts >\r"
 respond "*" ":emacs\r"
 respond "EMACS Editor" "\033xrun\033einit\033? Generate\r"
