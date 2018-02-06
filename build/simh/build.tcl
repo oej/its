@@ -43,7 +43,7 @@ proc mount_tape {file} {
 }
 
 proc create_tape {file} {
-    respond "sim>" "at tu0 $file\r"
+    respond "sim>" "at mta0 $file\r"
     respond "sim>" "c\r"
 }
 

@@ -739,6 +739,7 @@ expect ":KILL"
 respond "*" ":midas sys3;ts bitprt_sysen2;bitprt\r"
 expect ":KILL"
 
+if 0 {
 # inquir
 respond "*" ":link lisp;subloa lsp,nilcom;subloa >\r"
 respond "*" ":link sys;.fasl defs,lisp;.fasl defs\r"
@@ -789,6 +790,7 @@ respond "*" ":midas inquir;ts lookup_inquir;lookup\r"
 expect ":KILL"
 
 respond "*" ":link sys1;ts lookup,inquir;ts lookup\r"
+}
 
 # pword/panda
 respond "*" ":midas sysbin;pword bin_sysen1;pword\r"
@@ -838,6 +840,7 @@ expect ":KILL"
 respond "*" ":midas sys2;ts whosen_syseng;wsent\r"
 expect ":KILL"
 
+if 0 {
 # more lisp packages
 respond "*" ":link lisp;tty fasl,liblsp;tty fasl\r"
 respond "*" "complr\013"
@@ -920,6 +923,7 @@ expect ":KILL"
 ##respond "_" "alan;dprint\r"
 #respond "_" "\032"
 #type ":kill\r"
+}
 
 # NICNAM
 respond "*" ":midas sys2;ts nicnam_sysen3;nicnam\r"
@@ -1366,6 +1370,7 @@ expect ":KILL"
 respond "*" ":midas sys2;ts xhost_sysen3;xhost\r"
 expect ":KILL"
 
+if 0 {
 # compile lisp compiler
 respond "*" ":link comlap;cdmacs fasl,cd.fas >\r"
 respond "*" "complr\013"
@@ -1385,12 +1390,14 @@ respond "*" ":move .temp.;initia fasl,comlap;in.fas 120\r"
 respond "*" ":move .temp.;maklap fasl,comlap;mk.fas 80\r"
 respond "*" ":move .temp.;phas1 fasl,comlap;ph.fas 86\r"
 respond "*" ":move .temp.;srctrn fasl,comlap;st.fas 20\r"
+}
 
 # balanc
 respond "*" ":midas sys3;ts balanc_alan;balanc\r"
 expect ":KILL"
 respond "*" ":link sys3;ts movdir,sys3;ts balanc\r"
 
+if 0 {
 # ndskdmp tape
 respond "*" ":link kshack;good ram,.;ram ram\r"
 respond "*" ":link kshack;ddt bin,.;@ ddt\r"
@@ -1413,18 +1420,21 @@ respond "Rewind tape first?" "y"
 respond "Include DDT?" "y"
 respond "Input file" ".;nsalv bin\r"
 expect ":KILL"
+}
 
 # make output.tape
 
 respond "*" $emulator_escape
 create_tape "out/output.tape"
 type ":dump\r"
-respond "_" "dump links full\r"
+respond "_" "dump links full list\r"
+respond "LIST DEV =" "tty\r"
 respond "TAPE NO=" "0\r"
-expect "REEL"
+expect -timeout 3000 "REEL"
 respond "_" "rewind\r"
 respond "_" "icheck\r"
-respond "=" "\r"
+expect -timeout 3000 "="
+type "\r"
 respond "_" "quit\r"
 
 shutdown
